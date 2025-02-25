@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Álbum de Fotos 3x4</title>
+<style>
+body {
+font-family: Arial, sans-serif;
+text-align: center;
+background-color: #ffffff;
+margin: 0;
+padding: 0;
+}
+#camera-container {
+margin: 20px auto;
+
+}
+#video {
+width: 320px;
+height: 240px;
+border: 2px solid #ccc;
+}
+#foto {
+display: none;
+width: 320px;
+height: 240px;
+border: 2px solid #ccc;
+margin-top: 10px;
+}
+#album {
+display: flex;
+flex-wrap: wrap;
+justify-content: center;
+margin-top: 20px;
+}
+.foto-item {
+margin: 10px;
+text-align: center;
+cursor: pointer;
+}
+.foto-item img {
+width: 80px;
+height: 106.67px; /* Proporção 3x4 */
+object-fit: cover;
+border-radius: 5px;
+}
+.foto-item p {
+font-size: 14px;
+margin-top: 5px;
+}
+#captura-btn, #nova-foto-btn, #gravar-btn, #limpar-btn {
+margin-top: 10px;
+padding: 10px 20px;
+font-size: 16px;
+cursor: pointer;
+background-color: #54bbb6;
+
+color: white;
+border: none;
+border-radius: 5px;
+}
+#captura-btn:hover, #nova-foto-btn:hover, #gravar-btn:hover, #limpar-btn:hover {
+background-color: #459b97;
+}
+input[type="text"] {
+margin-top: 10px;
+padding: 8px;
+font-size: 16px;
+width: 80%;
+max-width: 300px;
+border-radius: 5px;
+border: 1px solid #ccc;
+}
+.titulo {
+      background-color: #54bbb6;
+      padding: 20px;
+      margin-left: 250px;
+      margin-right: 250px;
+      border-radius: 0px 0px 30px 30px;
+    }
+
+    .box{
+        background-color:#bcbcbc;
+        padding: 20px;
+        margin-left: 550px;
+        margin-right: 550px;
+        margin-top: 20px;
+        border-radius: 30px;
+    }
+
+</style>
+</head>
+<body>
+    <div class="titulo"><h1>Álbum de Fotos 3x4</h1></div>
+<!-- Contêiner da câmera -->
+<div class="box">
+<div id="camera-container">
+<video id="video" autoplay></video>
+<canvas id="foto"></canvas>
+<br>
+<button id="captura-btn">Capturar Foto</button>
+<br>
+<input type="text" id="nome" placeholder="Digite o nome da pessoa">
+<br>
+<button id="nova-foto-btn" style="display:none;">Adicionar Nova Foto</button>
+</div>
+<!-- Album de fotos -->
+<div id="album"></div>
+<!-- Botões adicionais -->
+<button id="gravar-btn">Gravar Fotos Selecionadas</button>
+<button id="limpar-btn">Limpar Todas as Fotos</button>
+</div>
+<script>
+// Acessando os elementos HTML
+const video = document.getElementById('video');
+const canvas = document.getElementById('foto');
+const context = canvas.getContext('2d');
+const capturaBtn = document.getElementById('captura-btn');
+const novaFotoBtn = document.getElementById('nova-foto-btn');
+const nomeInput = document.getElementById('nome');
+const album = document.getElementById('album');
+const gravarBtn = document.getElementById('gravar-btn');
+const limparBtn = document.getElementById('limpar-btn');
+let fotosSelecionadas = []; // Para armazenar as fotos selecionadas
+let fotos = []; // Para armazenar as fotos no formato base64
+// Função para iniciar a câmera
+async function iniciarCamera() {
+const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+video.srcObject = stream;
+}
+// Captura a foto do vídeo e desenha no canvas
+capturaBtn.addEventListener('click', () => {
+// Definir o tamanho do canvas como 3x4
+canvas.width = 320;
+canvas.height = 240;
+// Desenhar o conteúdo do vídeo no canvas
+context.drawImage(video, 0, 0, canvas.width, canvas.height);
+// Mostrar o botão para adicionar nova foto
+novaFotoBtn.style.display = 'inline-block';
+});
+
+// Adicionar a foto ao álbum com o nome
+novaFotoBtn.addEventListener('click', () => {
+const nome = nomeInput.value.trim();
+if (!nome) {
+alert('Por favor, insira o nome!');
+return;
+}
+// Criar um elemento para a foto
+const fotoItem = document.createElement('div');
+fotoItem.classList.add('foto-item');
+// Criar o elemento de imagem
+const img = document.createElement('img');
+img.src = canvas.toDataURL(); // Converter a foto em base64
+fotoItem.appendChild(img);
+// Criar o elemento de nome
+const p = document.createElement('p');
+p.textContent = nome;
+fotoItem.appendChild(p);
+// Marcar a foto como selecionável
+fotoItem.addEventListener('click', () => {
+if (fotoItem.classList.contains('selecionada')) {
+fotoItem.classList.remove('selecionada');
+fotosSelecionadas = fotosSelecionadas.filter(foto => foto !== img.src);
+} else {
+fotoItem.classList.add('selecionada');
+fotosSelecionadas.push(img.src);
+}
+});
+// Adicionar ao álbum
+album.appendChild(fotoItem);
+fotos.push(canvas.toDataURL()); // Armazenar as fotos em uma lista
+// Limpar a entrada do nome e ocultar o botão de nova foto
+nomeInput.value = '';
+novaFotoBtn.style.display = 'none';
+});
+// Gravar as fotos selecionadas como arquivos JPEG
+gravarBtn.addEventListener('click', () => {
+fotosSelecionadas.forEach((fotoData, index) => {
+const link = document.createElement('a');
+link.href = fotoData; // Fonte da imagem (base64)
+link.download = `foto_${index + 1}.jpg`; // Nome do arquivo
+link.click(); // Acionar o download
+});
+});
+// Limpar todas as fotos do álbum
+limparBtn.addEventListener('click', () => {
+album.innerHTML = ''; // Limpar o álbum
+fotos = []; // Limpar o array de fotos
+fotosSelecionadas = []; // Limpar fotos selecionadas
+});
+// Iniciar a câmera ao carregar a página
+iniciarCamera();
+</script>
+</body>
+</html>
